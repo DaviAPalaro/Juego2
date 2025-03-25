@@ -1,24 +1,189 @@
-# Compiled class file
-*.class
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
-# Log file
-*.log
+class ShowDoMilhaoAgua {
+    private static int puntaje = 0;
+    private static int preguntaActual = 0;
+    private static int vidas = 3;
 
-# BlueJ files
-*.ctxt
+    private static JFrame frame;
+    private static JLabel lblPregunta;
+    private static JButton btnRespuesta1, btnRespuesta2, btnRespuesta3, btnRespuesta4;
+    private static JLabel lblPuntaje, lblVidas;
+    private static JButton btnSiguiente;
+    private static JTextArea lblExplicacion;
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+    private static final String[][] preguntas = {
+            {"¿Qué es el cólera?", "Una enfermedad causada por agua contaminada", "Un deporte", "Un fenómeno meteorológico", "Una planta medicinal", "1", "El cólera é causado por água ou alimentos contaminados com bactérias."},
+            {"¿Cómo podemos purificar el agua en casa?", "Hirviendo el agua durante al menos 1 minuto", "Agregando azúcar", "Usando hielo", "Dejándola reposar por 24 horas", "1", "Hervendo a água matam-se bactérias e outros microorganismos."},
+            {"¿Cuál es una forma efectiva de prevenir la diarrea?", "Lavarse las manos antes de comer", "Compartir utensilios", "Evitar beber agua limpia", "No lavar los alimentos", "1", "Lave-se bem as mãos para evitar doenças transmissíveis."}
+    };
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+    private static final int TOTAL_PREGUNTAS = preguntas.length;
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(ShowDoMilhaoAgua::iniciarJuego);
+    }
+
+    private static void iniciarJuego() {
+        frame = new JFrame("Show do Milhão - Prevención de Enfermedades Transmitidas por el Agua");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLayout(new BorderLayout());
+        frame.setLocationRelativeTo(null); // Centraliza a janela
+
+        // Painel principal para pergunta e respostas
+        JPanel panelPrincipal = new JPanel(new GridLayout(6, 1, 10, 10));
+        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panelPrincipal.setBackground(new Color(20, 40, 80));
+
+        lblPregunta = new JLabel("", SwingConstants.CENTER);
+        lblPregunta.setFont(new Font("Arial", Font.BOLD, 20));
+        lblPregunta.setForeground(Color.WHITE);
+
+        btnRespuesta1 = criarBotaoRespuesta(1);
+        btnRespuesta2 = criarBotaoRespuesta(2);
+        btnRespuesta3 = criarBotaoRespuesta(3);
+        btnRespuesta4 = criarBotaoRespuesta(4);
+
+        btnSiguiente = new JButton("Siguiente");
+        btnSiguiente.setFont(new Font("Arial", Font.PLAIN, 14));
+        btnSiguiente.setEnabled(false); // Desabilitado até que uma resposta seja selecionada
+        btnSiguiente.addActionListener(e -> siguientePregunta());
+
+        // Adiciona os componentes ao painel principal
+        panelPrincipal.add(lblPregunta);
+        panelPrincipal.add(btnRespuesta1);
+        panelPrincipal.add(btnRespuesta2);
+        panelPrincipal.add(btnRespuesta3);
+        panelPrincipal.add(btnRespuesta4);
+        panelPrincipal.add(btnSiguiente);
+
+        frame.add(panelPrincipal, BorderLayout.CENTER);
+
+        // Painel para pontuação e vidas
+        JPanel panelStatus = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelStatus.setBackground(new Color(15, 30, 60));
+
+        lblPuntaje = new JLabel("Puntaje: 0");
+        lblPuntaje.setFont(new Font("Arial", Font.BOLD, 16));
+        lblPuntaje.setForeground(Color.WHITE);
+
+        lblVidas = new JLabel("Vidas: 3");
+        lblVidas.setFont(new Font("Arial", Font.BOLD, 16));
+        lblVidas.setForeground(Color.WHITE);
+
+        panelStatus.add(lblPuntaje);
+        panelStatus.add(lblVidas);
+
+        frame.add(panelStatus, BorderLayout.SOUTH);
+
+        // Painel explicativo
+        lblExplicacion = new JTextArea(4, 30);
+        lblExplicacion.setWrapStyleWord(true);
+        lblExplicacion.setLineWrap(true);
+        lblExplicacion.setEditable(false);
+        lblExplicacion.setFont(new Font("Arial", Font.ITALIC, 14));
+        lblExplicacion.setBackground(new Color(10, 20, 50));
+        lblExplicacion.setForeground(Color.WHITE);
+        frame.add(new JScrollPane(lblExplicacion), BorderLayout.NORTH);
+
+        frame.setVisible(true);
+        mostrarPregunta();
+    }
+
+    private static JButton criarBotaoRespuesta(int indice) {
+        JButton btn = new JButton();
+        btn.setFont(new Font("Arial", Font.PLAIN, 16));
+        btn.setBackground(new Color(50, 100, 180));
+        btn.setForeground(Color.WHITE);
+        btn.addActionListener(e -> verificarRespuesta(indice)); // Adiciona a ação de verificar resposta
+        return btn;
+    }
+
+    private static void mostrarPregunta() {
+        if (preguntaActual >= TOTAL_PREGUNTAS) {
+            JOptionPane.showMessageDialog(frame, "¡Juego terminado! Puntaje final: " + puntaje);
+            System.exit(0);
+        }
+
+        String[] pregunta = preguntas[preguntaActual];
+        lblPregunta.setText("Pregunta: " + pregunta[0]);
+
+        // Embaralhar as opções
+        ArrayList<String> respuestas = new ArrayList<>();
+        respuestas.add(pregunta[1]);
+        respuestas.add(pregunta[2]);
+        respuestas.add(pregunta[3]);
+        respuestas.add(pregunta[4]);
+        Collections.shuffle(respuestas);
+
+        // Atualizar textos dos botões
+        btnRespuesta1.setText(respuestas.get(0));
+        btnRespuesta2.setText(respuestas.get(1));
+        btnRespuesta3.setText(respuestas.get(2));
+        btnRespuesta4.setText(respuestas.get(3));
+
+        lblExplicacion.setText("Selecione uma resposta...");
+        habilitarBotoes();
+        btnSiguiente.setEnabled(false); // Desabilitar botão "Próximo"
+    }
+
+    private static void verificarRespuesta(int indiceSeleccionado) {
+        String[] pregunta = preguntas[preguntaActual];
+        String respostaCorreta = pregunta[1];
+
+        // Identifica o botão selecionado
+        JButton botaoSelecionado;
+        switch (indiceSeleccionado) {
+            case 1 -> botaoSelecionado = btnRespuesta1;
+            case 2 -> botaoSelecionado = btnRespuesta2;
+            case 3 -> botaoSelecionado = btnRespuesta3;
+            case 4 -> botaoSelecionado = btnRespuesta4;
+            default -> throw new IllegalStateException("Índice inválido");
+        }
+
+        // Verifica se a resposta é correta
+        if (botaoSelecionado.getText().equals(respostaCorreta)) {
+            puntaje += 10;
+            lblPuntaje.setText("Puntaje: " + puntaje);
+            lblExplicacion.setText("¡Correcto! " + pregunta[6]);
+        } else {
+            vidas--;
+            lblVidas.setText("Vidas: " + vidas);
+            String pergunta = "";
+            lblExplicacion.setText("Incorrecto. " + pergunta.substring(6));
+
+
+            // Verifica se o jogador perdeu todas as vidas
+            if (vidas == 0) {
+                JOptionPane.showMessageDialog(frame, "¡Sem vidas! Puntaje final: " + puntaje);
+                System.exit(0);
+            }
+        }
+
+        desabilitarBotoes();
+        btnSiguiente.setEnabled(true); // Habilitar botão para próxima pergunta
+    }
+
+    private static void siguientePregunta() {
+        preguntaActual++;
+        mostrarPregunta();
+    }
+
+    private static void habilitarBotoes() {
+        btnRespuesta1.setEnabled(true);
+        btnRespuesta2.setEnabled(true);
+        btnRespuesta3.setEnabled(true);
+        btnRespuesta4.setEnabled(true);
+    }
+
+    private static void desabilitarBotoes() {
+        btnRespuesta1.setEnabled(false);
+        btnRespuesta2.setEnabled(false);
+        btnRespuesta3.setEnabled(false);
+        btnRespuesta4.setEnabled(false);
+    }
+}
